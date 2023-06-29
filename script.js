@@ -5,6 +5,8 @@ const unitArea = {
 
 const player1Points = document.querySelector('#player1-points');
 const player2Points = document.querySelector('#player2-points');
+const player1Button = document.querySelector('button#player1');
+const player2Button = document.querySelector('button#player2')
 const timer = document.querySelector('#timer');
 
 const canvas = document.querySelector('canvas');
@@ -30,9 +32,13 @@ let endOfGame = false;
 let player1Score = 0;
 let player2Score = 0;
 let alienCount = 0;
+let playerBullets = {
+    player1:0,
+    player2:0
+}
+let player1 = false;
+let player2 = false;
 
-player1Points.innerHTML = player1Score;
-player2Points.innerHTML = player2Score;
 timer.innerHTML = 60;
 
 function animate(){
@@ -46,6 +52,8 @@ function animate(){
     drawPlayerShip(playerShip);
     updateAliens(alienArr);   
     updateBullet();
+    player1Points.innerHTML = playerBullets.player1;
+    player2Points.innerHTML = playerBullets.player2;
 
 }
 animate();
@@ -66,16 +74,17 @@ function updateBullet(){
         drawBullet(bulletArr[i]);
         // console.log(bulletArr[i]);
         for (let j = 0; j < alienArr.length; j++) {
-            if (/*bulletArr[i].yPosition>alienArr[j].yPosition+alienArr[j].height && */
-                bulletArr[i].xPosition>alienArr[j].xPosition &&
-                bulletArr[i].yPosition<alienArr[j].yPosition+alienArr[j].width){
-                console.log('hit');
+            if (bulletArr[i].hit===false && alienArr[j].hit===false && bulletArr[i].xPosition>alienArr[j].xPosition && 
+                bulletArr[i].xPosition<alienArr[j].xPosition+alienArr[j].width &&
+                bulletArr[i].yPosition<alienArr[j].yPosition+alienArr[j].height && 
+                bulletArr[i].yPosition>alienArr[j].yPosition){
                 alienArr[j].hit = true;
+                bulletArr[i].hit = true;
+                alienCount--
+                player1Score += 100
             }
-            // player1Points +=100
-
         }
-        
+
         //clearing the bullet array as soon as bullet hits alien or off the canvas
         if (bulletArr[0].yPosition<0 || bulletArr[i].hit===true){
             bulletArr.shift();
@@ -84,11 +93,6 @@ function updateBullet(){
 
 }
 
-// function collitionDetection(bullet,alien){
-//     if (bullet.x<alien.x+alien.width && bullet.x+bullet.width>alien.x && bullet.y<alien.y+alien.height && bullet.y+bullet.height>alien.y){
-//         console.log('true');
-//     }else console.log('false');
-// }
 
 function createAlienArray(columns, rows){
     for (let i = 0; i<columns; i++){
@@ -139,6 +143,16 @@ document.addEventListener('keydown',function(event){
     }
 })
 
+document.addEventListener('click',function(event){
+    if (event.target === player1Button){
+        player1 = true;
+    }
+    else if (event.target === player2Button){
+        player1 = false;
+        player2 = true;
+    }
+})
+
 document.addEventListener('keyup',function(event){
     if (event.key === ' '){    
         let bullet = {
@@ -150,5 +164,11 @@ document.addEventListener('keyup',function(event){
                 hit: false
             }
         bulletArr.push(bullet);
+        if (player1){
+            playerBullets.player1++
+        }
+        else if (player2){
+            playerBullets.player2++
+        }
     }
 })
