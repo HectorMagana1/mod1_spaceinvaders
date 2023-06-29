@@ -1,214 +1,154 @@
-const pixel = {
-    height: 25,
-    width: 25
-}
+const unitArea = {
+    width: 25,
+    height: 25
+};
 
-//--------------------------CANVAS DECLARATION---------------------------
+const player1Points = document.querySelector('#player1-points');
+const player2Points = document.querySelector('#player2-points');
+const timer = document.querySelector('#timer');
+
 const canvas = document.querySelector('canvas');
-canvas.style.backgroundColor = '#d2d0d0';
-canvas.width = pixel.width*17; //425px
-canvas.height = pixel.height*22; //550px
-canvas.style.border = '5px solid lightgray'
-//--------------------------CANVAS DECLARATION---------------------------
+canvas.style.backgroundImage = 'linear-gradient(gray, lightgray)';
+canvas.width = unitArea.width*17;
+canvas.height = unitArea.height*22;
+const context = canvas.getContext('2d');
 
-
-//---------------------------CANVAS DIMENSIONS---------------------------
-console.log(`Canvas width: ${canvas.width}px`);
-console.log(`Canvas height: ${canvas.height}px`);
-console.log(`Canvas playing area is ${canvas.width/pixel.width} x ${canvas.height/pixel.height} \neach pixel is 25px x 25px`)
-//---------------------------CANVAS DIMENSIONS---------------------------
-
-
-//----------------------------CANVAS CONTEXT-----------------------------
-const c = canvas.getContext('2d');
-//----------------------------CANVAS CONTEXT-----------------------------
-
-
-//-----------------------------PLAYER CLASS------------------------------
-class Player{
-    constructor (){
-        this.height = pixel.height;
-        this.width = pixel.width;
-        this.x = Math.floor((canvas.width/2)-(pixel.width/2));
-        this.y = canvas.height-pixel.height*2;
-        this.dx = 0;
-        this.dy = 0;
-        this.bulletsArr = [];
-        this.bulletHeight = 5;
-        this.bulletWidth = 2;
-        this.bulletY = this.y-this.bulletHeight
-        this.bulletVelocity = 0;
-    }
-
-    draw(){
-        c.fillStyle='black';
-        c.fillRect(this.x, this.y, this.width, this.height);
-    }
-    bulletDraw(){
-        c.fillStyle='red';
-        c.fillRect(this.x+this.width/2,this.bulletY,this.bulletWidth,this.bulletHeight);
-    }
-    // bulletUpdate(){
-    //     this.bulletDraw();
-    //     while(this.bulletsArr.length>0){
-    //         this.bulletY += this.bulletVelocity;
-    //     }
-    // }
+const playerShip = {
+    xPosition: Math.floor(canvas.width/2-unitArea.width/2),
+    yPosition: canvas.height-(2*unitArea.height),
+    width: unitArea.width,
+    height: unitArea.height,
+    xPosChange: 25
 }
-//-----------------------------PLAYER CLASS------------------------------
 
+let alienColumns = 4;
+let alienRows = 3;
+const bulletArr = [];
+const alienArr =[];
+let endOfTurn = false;
+let endOfGame = false;
+let player1Score = 0;
+let player2Score = 0;
+let alienCount = 0;
 
-//---------------------------PLAYER1 INSTANCE----------------------------
-const player1 = new Player();
-//---------------------------PLAYER1 INSTANCE----------------------------
+player1Points.innerHTML = player1Score;
+player2Points.innerHTML = player2Score;
+timer.innerHTML = 60;
 
-
-//---------------------------ANIMATE FUNCTION----------------------------
 function animate(){
     requestAnimationFrame(animate);
-    c.clearRect(0,0,canvas.width,canvas.height);
-    player1.draw();
-    // player1.bulletUpdate()
+
+    if(endOfGame === true){
+        return;
+    }
+    context.clearRect(0,0,canvas.width,canvas.height);
+
+    drawPlayerShip(playerShip);
+    updateAliens(alienArr);   
+    updateBullet();
+
 }
 animate();
-//---------------------------ANIMATE FUNCTION----------------------------
+
+function drawPlayerShip(playerObject){
+    context.fillStyle = 'black';
+    context.fillRect(playerObject.xPosition, playerObject.yPosition, playerObject.width, playerObject.height);
+}
+
+function drawBullet(bulletObject){
+    context.fillStyle = 'red';
+    context.fillRect(bulletObject.xPosition,bulletObject.yPosition,bulletObject.width,bulletObject.height);
+}
+
+function updateBullet(){
+    for (let i = 0; i<bulletArr.length; i++){
+        bulletArr[i].yPosition += bulletArr[i].yVelocity;
+        drawBullet(bulletArr[i]);
+        // console.log(bulletArr[i]);
+        for (let j = 0; j < alienArr.length; j++) {
+            if (/*bulletArr[i].yPosition>alienArr[j].yPosition+alienArr[j].height && */
+                bulletArr[i].xPosition>alienArr[j].xPosition &&
+                bulletArr[i].yPosition<alienArr[j].yPosition+alienArr[j].width){
+                console.log('hit');
+                alienArr[j].hit = true;
+            }
+            // player1Points +=100
+
+        }
+        
+        //clearing the bullet array as soon as bullet hits alien or off the canvas
+        if (bulletArr[0].yPosition<0 || bulletArr[i].hit===true){
+            bulletArr.shift();
+        }
+    }
+
+}
+
+// function collitionDetection(bullet,alien){
+//     if (bullet.x<alien.x+alien.width && bullet.x+bullet.width>alien.x && bullet.y<alien.y+alien.height && bullet.y+bullet.height>alien.y){
+//         console.log('true');
+//     }else console.log('false');
+// }
+
+function createAlienArray(columns, rows){
+    for (let i = 0; i<columns; i++){
+        for (let j = 0; j<rows; j++){
+            let aliens = {
+                xPosition: unitArea.width+(i*50),
+                yPosition: unitArea.height+(j*50),
+                width: unitArea.width,
+                height: unitArea.height,
+                velocity: 1,
+                hit: false
+            }
+            alienArr.push(aliens);
+        }
+    }
+    alienCount = alienArr.length;
+    // console.log(alienArr);
+}
+createAlienArray(alienColumns,alienRows);
+
+function updateAliens(alienArr){
+    for(let i = 0; i<alienArr.length; i++){
+        if (alienArr[i].hit === false){
+            alienArr[i].xPosition += alienArr[i].velocity;
+
+            if(alienArr[i].xPosition+alienArr[i].width>= canvas.width || alienArr[i].xPosition<=0){
+                alienArr[i].yPosition +=25;
+                alienArr[i].velocity *= -1;
+                alienArr[i].xPosition += alienArr[i].velocity*2;
+            }
+            context.fillStyle='blue'
+            context.fillRect(alienArr[i].xPosition,alienArr[i].yPosition,alienArr[i].width,alienArr[i].height)
+
+            if (alienArr[i].yPosition>=playerShip.yPosition){
+                endOfGame = true;
+            }
+        }
+    }
+}
 
 
-//---------------------------EVENT LISTENERS-----------------------------
-document.addEventListener('keydown', function(event){
-    if (event.key === 'ArrowLeft' && player1.x > 0){
-        player1.x -= pixel.width;
+document.addEventListener('keydown',function(event){
+    if (event.key === 'ArrowLeft' && playerShip.xPosition > 0){
+        playerShip.xPosition -= playerShip.xPosChange;
     }
-    else if (event.key === 'ArrowRight' && (player1.x+player1.width)<canvas.width){
-        player1.x += pixel.width;
-    }
-    // else if (event.key === ' '){
-    //     console.log('space')
-    //     player1.bulletsArr.push('Bullet');
-    //     player1.bulletVelocity = -5;
-    // }
-});
-
-document.addEventListener('keyup', function(event){
-    if (event.key === 'ArrowLeft'){
-        player1.dx = 0;
-    }
-    else if (event.key === 'ArrowRight'){
-        player1.dx = 0;
+    else if (event.key === 'ArrowRight' && playerShip.xPosition+playerShip.width<canvas.width){
+        playerShip.xPosition += playerShip.xPosChange;
     }
 })
-//---------------------------EVENT LISTENERS-----------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// console.log(c);
-// console.log(canvas);
-
-// //creates a rectangle c.fillRect(xPosition,yPosition,width,height)
-// //.fillStyle = 'color'; is the fill color for shapes
-// let color = 'red'
-// c.fillStyle = color;
-// const rect1 = c.fillRect(10,10,50,50)
-// c.fillStyle = 'rgba(0,0,255,0.5)'
-// const rect2 = c.fillRect(100,10,50,50)
-// c.fillStyle = 'rgba(0,255,0,0.5)'
-// const rect3 = c.fillRect(140,110,50,90)
-
-//-----------------------CREATING A LINE-------------------------------
-// c.beginPath()
-
-// //.moveTo(x,y) is the starting position
-// c.moveTo(300,300);
-
-// //.lineTo(x,y) is the ending position for a line
-// //-- can keep adding to the line
-// c.lineTo(500,100);
-// c.lineTo(600,300);
-
-// //color of the stroke
-// c.strokeStyle = 'red'
-
-// //.stroke is the method to color in the line
-// c.stroke();
-//-----------------------CREATING A LINE-------------------------------
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-
-//-----------------------CREATING A CIRCLE-----------------------------
-
-//.arc(xPosition, yPosition, radius, startAngle(radians)[what angle to start drawing arc], endAngle(radians)[how long arc to go for],drawCounterClockWise(boolean))
-// for(let i = 0; i<100; i++){
-//     let redVal = Math.floor(Math.random()*255);
-//     let greenVal = Math.floor(Math.random()*255);
-//     let blueVal = Math.floor(Math.random()*255);
-//     let opaVal = Number((Math.random()+.5).toFixed(2));
-//     let x = Math.random()*window.innerWidth;
-//     let y = Math.random()*window.innerHeight;
-//     let radius = (Math.random()*20)+20;
-//     c.beginPath();
-//     c.arc(x, y, radius, 0, Math.PI*2,false);
-//     c.strokeStyle= `rgba(${redVal},${greenVal},${blueVal},${opaVal}`;
-//     c.stroke();
-//     console.log(redVal,greenVal,blueVal,opaVal);
-// }
-
-//-----------------------CREATING A CIRCLE-----------------------------
-
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
-
-//----------------------------ANIMATE----------------------------------
-
-// let x = 200;
-// let y = 200;
-// let dx = 2;
-// let dy = 2;
-// let radius = 30;
-
-// function animate(){
-//     requestAnimationFrame(animate);
-//     c.clearRect(0,0,innerWidth,innerHeight);
-
-//     c.beginPath();
-//     c.arc(x,y,radius,0,Math.PI*2,false);
-//     c.strokeStyle = 'blue';
-//     c.stroke();
-
-//     if (x + radius > innerWidth || x - radius < 0){
-//         dx = -dx;
-//     }
-
-//     if (y+radius > innerHeight || y-radius <0){
-//         dy= -dy;
-//     }
-//     x+=dx;
-//     y+=dy;
-// }
-// animate();
-
-// document.addEventListener('mousemove',function(event){
-//     let mousePos = {};
-//     mousePos.x = event.clientX;
-//     mousePos.y = event.clientY;
-//     console.log(mousePos);
-// })
+document.addEventListener('keyup',function(event){
+    if (event.key === ' '){    
+        let bullet = {
+                xPosition: playerShip.xPosition +(playerShip.width/2-1.5),
+                yPosition: playerShip.yPosition,
+                width: 3,
+                height: 5,
+                yVelocity: -2,
+                hit: false
+            }
+        bulletArr.push(bullet);
+    }
+})

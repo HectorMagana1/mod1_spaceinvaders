@@ -5,8 +5,34 @@ body{
     justify-content: center;
     align-items:center;
 }
-/* canvas{
-    outline: 2px solid black;
-    height: 100vh;
-    width: 100vw;
-} */
+#container{
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#point-container{
+    display:flex;
+    flex-direction: column;
+}
+
+.points{
+    background-image: linear-gradient(gray, lightgray);
+    height: 150px;
+    border-radius: 5px;
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+h2{
+    margin-top:0;
+}
+#title{
+    display:flex;
+    justify-content: center;
+}
+#timer{
+    padding-left:50px;
+}
