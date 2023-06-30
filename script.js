@@ -46,15 +46,7 @@ function animate(){
     drawPlayerShip(playerShip);
     updateAliens(alienArr);   
     updateBullet();
-
-
-    if (alienCount==0){
-        alienColumns++
-        alienRows++
-        alienArr=[];
-        bulletArr=[];
-        createAlienArray(); 
-    }
+    nextLevel();
     player1Points.innerHTML = playerPoints;
     timer.innerHTML = seconds;
 }
@@ -98,17 +90,6 @@ function updateBullet(){
     }
 
 }
-
-// function endGame () {
-    // if (alienCount==0){
-    //     alienColumns++
-    //     alienRows++
-    //     alienArr=[];
-    //     bulletArr=[];
-    //     createAlienArray();
-    //     updateBullet();
-    // }
-// }
 
 
 function createAlienArray(columns, rows){
@@ -158,6 +139,16 @@ function countDownClock (){
     }
 }
 setInterval(countDownClock,1000)
+
+function nextLevel(){
+    if (alienCount==0){
+        alienColumns++
+        alienRows++
+        bulletArr=[];
+        alienArr=[];
+        createAlienArray(alienColumns,alienRows);    
+    }
+}
 
 document.addEventListener('keydown',function(event){
     if (event.key === 'ArrowLeft' && playerShip.xPosition > 0){
