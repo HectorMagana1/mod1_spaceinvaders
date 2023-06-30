@@ -6,8 +6,9 @@ const unitArea = {
 const player1Points = document.querySelector('#player1-points');
 const player2Points = document.querySelector('#player2-points');
 const player1Button = document.querySelector('button#player1');
-const player2Button = document.querySelector('button#player2')
+const player2Button = document.querySelector('button#player2');
 const timer = document.querySelector('#timer');
+const message = document.querySelector('#message');
 
 const canvas = document.querySelector('canvas');
 canvas.style.backgroundImage = 'linear-gradient(gray, lightgray)';
@@ -29,22 +30,23 @@ const bulletArr = [];
 const alienArr =[];
 let endOfTurn = false;
 let endOfGame = false;
-let player1Score = 0;
-let player2Score = 0;
 let alienCount = 0;
 let playerBullets = {
     player1:0,
     player2:0
 }
+
 let player1 = false;
 let player2 = false;
 
-timer.innerHTML = 60;
+let seconds = 30;
+let bulletsShot = 0;
 
 function animate(){
     requestAnimationFrame(animate);
 
     if(endOfGame === true){
+        message.innerHTML = 'Game Over'
         return;
     }
     context.clearRect(0,0,canvas.width,canvas.height);
@@ -54,9 +56,12 @@ function animate(){
     updateBullet();
     player1Points.innerHTML = playerBullets.player1;
     player2Points.innerHTML = playerBullets.player2;
+    timer.innerHTML = seconds;
+ }
 
-}
-animate();
+animate(); 
+
+
 
 function drawPlayerShip(playerObject){
     context.fillStyle = 'black';
@@ -72,7 +77,8 @@ function updateBullet(){
     for (let i = 0; i<bulletArr.length; i++){
         bulletArr[i].yPosition += bulletArr[i].yVelocity;
         drawBullet(bulletArr[i]);
-        // console.log(bulletArr[i]);
+
+        //collision detection
         for (let j = 0; j < alienArr.length; j++) {
             if (bulletArr[i].hit===false && alienArr[j].hit===false && bulletArr[i].xPosition>alienArr[j].xPosition && 
                 bulletArr[i].xPosition<alienArr[j].xPosition+alienArr[j].width &&
@@ -80,8 +86,13 @@ function updateBullet(){
                 bulletArr[i].yPosition>alienArr[j].yPosition){
                 alienArr[j].hit = true;
                 bulletArr[i].hit = true;
-                alienCount--
-                player1Score += 100
+                alienCount--;
+                if (player1){
+                    playerBullets.player1 += Math.floor(100+(alienArr[j].xPosition*.2)+(seconds*.2)-(bulletsShot*2));
+                }
+                else if (player2){
+                    playerBullets.player2 += Math.floor(100+(alienArr[j].xPosition*.2)+(seconds*.2)-(bulletsShot*2));
+                }
             }
         }
 
@@ -91,6 +102,13 @@ function updateBullet(){
         }
     }
 
+}
+
+function endGame () {
+    if (player2 && alienColumns.length<=0){
+        seconds = 30;
+        createAlienArray(alienColumns,alienRows)
+    }
 }
 
 
@@ -126,13 +144,22 @@ function updateAliens(alienArr){
             context.fillStyle='blue'
             context.fillRect(alienArr[i].xPosition,alienArr[i].yPosition,alienArr[i].width,alienArr[i].height)
 
-            if (alienArr[i].yPosition>=playerShip.yPosition){
+        if (alienArr[i].yPosition>=playerShip.yPosition){
                 endOfGame = true;
             }
         }
     }
 }
 
+function countDownClock (){
+    if (seconds>0){
+        seconds--;
+    }
+    else if (seconds<=0){
+        endOfGame=true;
+    }
+}
+setInterval(countDownClock,1000)
 
 document.addEventListener('keydown',function(event){
     if (event.key === 'ArrowLeft' && playerShip.xPosition > 0){
@@ -146,10 +173,11 @@ document.addEventListener('keydown',function(event){
 document.addEventListener('click',function(event){
     if (event.target === player1Button){
         player1 = true;
+        player2 = false;
     }
     else if (event.target === player2Button){
-        player1 = false;
         player2 = true;
+        player1 = false;
     }
 })
 
@@ -164,11 +192,6 @@ document.addEventListener('keyup',function(event){
                 hit: false
             }
         bulletArr.push(bullet);
-        if (player1){
-            playerBullets.player1++
-        }
-        else if (player2){
-            playerBullets.player2++
-        }
+        bulletsShot++
     }
 })
